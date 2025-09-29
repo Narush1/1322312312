@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sealmes чат</title>
+  <style>
+    body { font-family: Verdana, sans-serif; margin: 20px; }
+    #chat { border: 1px solid #888; height: 350px; overflow-y: auto; padding: 10px; background: #f9f9f9; }
+    #chat p { margin: 5px 0; }
+    #nickArea, #msgArea { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Sealmes чат</h1>
+
+  <div id="nickArea">
+    <input id="nickInput" placeholder="Введи ник" autofocus />
+    <button id="joinBtn">Войти</button>
+  </div>
+
+  <div id="msgArea" style="display:none;">
+    <div id="chat"></div>
+    <form id="msgForm">
+      <input id="msgInput" autocomplete="off" placeholder="Напиши сообщение" />
+      <button>Отправить</button>
+    </form>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const nickArea = document.getElementById('nickArea');
+    const nickInput = document.getElementById('nickInput');
+    const joinBtn = document.getElementById('joinBtn');
+
+    const msgArea = document.getElementById('msgArea');
+    const chat = document.getElementById('chat');
+    const msgForm = document.getElementById('msgForm');
+    const msgInput = document.getElementById('msgInput');
+
+    joinBtn.onclick = () => {
+      const nick = nickInput.value.trim();
+      if (!nick) {
+        alert('Введите ник');
+        return;
+      }
+      socket.emit('setNick', nick);
+      nickArea.style.display = 'none';
+      msgArea.style.display = 'block';
+      msgInput.focus();
+    };
+
+    socket.on('message', data => {
+      const p = document.createElement('p');
+      p.textContent = `${data.user}: ${data.text}`;
+      chat.appendChild(p);
+      chat.scrollTop = chat.scrollHeight;
+    });
+
+    msgForm.onsubmit = e => {
+      e.preventDefault();
+      const msg = msgInput.value.trim();
+      if (!msg) return;
+      socket.emit('sendMsg', msg);
+      msgInput.value = '';
+    };
+  </script>
+</body>
+</html>
